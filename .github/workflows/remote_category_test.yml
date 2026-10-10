@@ -1,0 +1,26 @@
+name: One-time Short Stay category audit
+
+# Manual read-only validation only: no schedule or reservation requests.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    env:
+      AUTH_STATE_B64: ${{ secrets.AUTH_STATE_B64 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install browser
+        run: |
+          python -m pip install "playwright>=1.55,<2"
+          python -m playwright install --with-deps chromium
+      - name: Check category without exposing page content
+        run: python visa_slot_monitor_free/remote_category_preflight.py
