@@ -68,7 +68,7 @@ jobs:
           python -m pip install -r visa_slot_monitor_free/requirements.txt
           python -m playwright install --with-deps chromium
       - name: Check at Tashkent :00, :02 and :04
-        if: steps.status.outputs.skip != 'true'
+        if: ${{ !inputs.test_hourly_telegram && steps.status.outputs.skip != 'true' }}
         run: python visa_slot_monitor_free/calendar_schedule_runner.py
       - name: Save non-sensitive calendar status and checkpoint
         if: ${{ always() && !inputs.test_hourly_telegram && steps.status.outputs.skip != 'true' }}
