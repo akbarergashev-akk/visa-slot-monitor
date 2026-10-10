@@ -22,7 +22,7 @@ CATEGORY_JS = r"""() => {
   const grid = document.querySelector('table.sc_cal_month');
   if (!grid) return false;
   const normalize = s => (s || '').replace(/\s+/g, ' ').trim().toLowerCase();
-  const wanted = /visa\\s+application\\s+for\\s+short\\s+stay\\s*\\(\\s*applicant\\s*\\)/i;
+  const wanted = /visa\s+application\s+for\s+short\s+stay\s*\(\s*applicant\s*\)/i;
   const top = grid.getBoundingClientRect().top;
   return [...document.querySelectorAll('a,button,div,span,p,label,li')].some(el => {
     if (!el.getClientRects().length) return false;
