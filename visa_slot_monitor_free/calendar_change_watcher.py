@@ -84,7 +84,24 @@ def main() -> int:
             try:
                 page.locator("table.sc_cal_month").wait_for(state="visible", timeout=25000)
             except Exception:
-                print("RESULT: CALENDAR_NOT_VISIBLE (no notification sent)")
+                # Categorize failures without printing sensitive page data, URL or cookies.
+                from urllib.parse import urlparse
+                login_path = urlparse(page.url).path.lower().startswith("/auth/")
+                try:
+                    password_form = page.locator('input[type="password"]:visible').count() > 0
+                    challenge = page.locator(
+                        'iframe[src*="recaptcha"]:visible, iframe[src*="hcaptcha"]:visible, '
+                        '[class*="h-captcha"]:visible, [class*="g-recaptcha"]:visible'
+                    ).count() > 0
+                except Exception:
+                    password_form, challenge = False, False
+                if login_path or password_form:
+                    print("RESULT: LOGIN_REQUIRED (saved GitHub session may have expired)")
+                elif challenge:
+                    print("RESULT: CAPTCHA_REQUIRES_MANUAL_ACTION")
+                else:
+                    print("RESULT: CALENDAR_NOT_VISIBLE (cause uncertain; no automatic retry)")
+                print("NOTE: No Telegram notification and no site retry performed.")
                 return 3
             if not page.evaluate(CATEGORY_JS):
                 print("RESULT: CATEGORY_NOT_VERIFIED (no notification sent)")
