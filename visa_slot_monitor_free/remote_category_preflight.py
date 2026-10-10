@@ -7,25 +7,32 @@ from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
 URL = "https://uzembassyryouji.rsvsys.jp/reservations/calendar"
 CHECK_JS = r"""() => {
   const grid = document.querySelector("table.sc_cal_month");
-  const visible = el => !!el.getClientRects().length;
-  const names = /short\s*[- ]?stay/i;
-  const applicant = /applicant/i;
-  const norm = el => (el.innerText || el.textContent || "").replace(/\s+/g," ").trim().slice(0,250);
-  const scoped = [...document.querySelectorAll("h1,h2,h3,h4,[aria-current],[aria-selected],option:checked,select,button,[role=tab],[role=heading],[class*=selected],[class*=active]")];
-  const exact = scoped.filter(el => {
-    if (!visible(el) && el.tagName !== "OPTION") return false;
-    const text = norm(el);
-    return text.length < 160 && names.test(text) && applicant.test(text);
+  const visible = el => !!el.getClientRects().length && getComputedStyle(el).visibility !== "hidden";
+  const norm = text => (text || "").replace(/\s+/g," ").trim();
+  const target = /visa\s+application\s+for\s+short\s+stay\s*\(\s*applicant\s*\)/i;
+  const selectors = "a,button,div,span,p,label,li,[role=link],[role=button]";
+  const elements = [...document.querySelectorAll(selectors)];
+  const matching = elements.filter(el => {
+    if (!visible(el)) return false;
+    const text = norm(el.innerText || el.textContent);
+    return text.length < 150 && target.test(text);
   });
-  const selected = exact.filter(el => {
-    const a=el.getAttribute("aria-selected") === "true" || el.getAttribute("aria-current") ||
-      el.matches("option:checked") || /selected|active|current/i.test(String(el.className || ""));
-    return !!a;
+  const rect = grid?.getBoundingClientRect();
+  const above = matching.filter(el => {
+    if (!rect) return false;
+    const b = el.getBoundingClientRect();
+    const distance = rect.top - b.bottom;
+    return distance >= -10 && distance < 700;
   });
-  const txt = (document.body.innerText || "").slice(0,150000);
-  return {calendar: !!grid && grid.querySelectorAll("td").length >= 28,
-          page_mentions_short_stay: names.test(txt) && applicant.test(txt),
-          heading_or_control_matches: exact.length, selected_control_matches: selected.length};
+  // A visible category card above the calendar is stronger evidence than
+  // incidental category words elsewhere on the page. This still is not
+  // equivalent to server-verified booking availability.
+  return {
+    calendar: !!grid && grid.querySelectorAll("td").length >= 28,
+    category_exact_visible: matching.length > 0,
+    category_card_above_calendar: above.length > 0,
+    visible_category_candidates: Math.min(matching.length, 20)
+  };
 }"""
 
 def main():
@@ -61,10 +68,10 @@ def main():
                     print("RESULT: CALENDAR_NOT_CONFIRMED")
                     return 3
                 print("RESULT: SUCCESS (calendar visible)")
-                print("CATEGORY_TEXT_PRESENT:", result["page_mentions_short_stay"])
-                print("CATEGORY_HEADING_OR_CONTROL_MATCHES:", result["heading_or_control_matches"])
-                print("CATEGORY_SELECTED_CONTROL_MATCHES:", result["selected_control_matches"])
-                print("NOTE: category selection needs manual confirmation; these hints are not conclusive.")
+                print("CATEGORY_EXACT_VISIBLE:", result["category_exact_visible"])
+                print("CATEGORY_CARD_ABOVE_CALENDAR:", result["category_card_above_calendar"])
+                print("CATEGORY_CANDIDATES:", result["visible_category_candidates"])
+                print("NOTE: visible category above the calendar strongly supports the scope, but does not guarantee appointment availability.")
                 return 0
             finally:
                 browser.close()
