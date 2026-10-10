@@ -25,6 +25,11 @@ on:
         required: true
         default: false
         type: boolean
+      test_hourly_telegram:
+        description: 'Send one Telegram status TEST only; do not contact the embassy'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -47,6 +52,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Check pause flag without contacting embassy
+        if: ${{ !inputs.test_hourly_telegram }}
         id: status
         shell: bash
         run: |
@@ -57,7 +63,7 @@ jobs:
             echo 'skip=false' >> "$GITHUB_OUTPUT"
           fi
       - name: Install Python and browser for unpaused checks
-        if: steps.status.outputs.skip != 'true'
+        if: ${{ !inputs.test_hourly_telegram && steps.status.outputs.skip != 'true' }}
         run: |
           python -m pip install -r visa_slot_monitor_free/requirements.txt
           python -m playwright install --with-deps chromium
@@ -65,7 +71,7 @@ jobs:
         if: steps.status.outputs.skip != 'true'
         run: python visa_slot_monitor_free/calendar_schedule_runner.py
       - name: Save non-sensitive calendar status and checkpoint
-        if: always() && steps.status.outputs.skip != 'true'
+        if: ${{ always() && !inputs.test_hourly_telegram && steps.status.outputs.skip != 'true' }}
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
@@ -78,3 +84,8 @@ jobs:
             git commit -m "Save scheduled calendar state [skip ci]"
             git push
           fi
+      - name: Telegram hourly status (or safe manual heartbeat test)
+        if: ${{ always() && (github.event_name == 'schedule' || inputs.test_hourly_telegram) }}
+        env:
+          HEARTBEAT_TEST: ${{ inputs.test_hourly_telegram }}
+        run: python visa_slot_monitor_free/calendar_hourly_heartbeat.py
