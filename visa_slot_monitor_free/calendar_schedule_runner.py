@@ -98,34 +98,57 @@ def main() -> int:
 
     hour = target_hour_from_event()
     first = now.replace(hour=hour, minute=0, second=0, microsecond=0)
-    # GitHub Actions can start late; never run outside the requested time window.
-    if now < first - timedelta(minutes=6) or now > first + timedelta(minutes=4, seconds=GRACE_SECONDS):
-        print("RESULT: MISSED_SCHEDULE_WINDOW; no website requests")
-        return 0
-    if status_paused():
-        print("RESULT: PAUSED_DUE_TO_LOGIN; no website requests")
-        return 0
-
-    performed = 0
-    for minute in (0, 2, 4):
-        intended = first + timedelta(minutes=minute)
-        now = datetime.now(TZ)
-        if now > intended + timedelta(seconds=GRACE_SECONDS):
-            print(f"SKIP_MISSED_SLOT: {hour:02d}:{minute:02d}")
-            continue
-        wait = (intended - now).total_seconds()
-        if wait > 0:
-            time.sleep(wait)
-        print(f"CHECK_START: {hour:02d}:{minute:02d} Asia/Tashkent")
-        performed += 1
-        code = try_one_check()
-        if code == 4:
+    report = {
+        "date": first.date().isoformat(), "hour": hour,
+        "attempted": 0, "succeeded": 0, "missed": 0, "state": "unknown",
+    }
+    try:
+        # GitHub Actions may start late; never run outside requested window.
+        if now < first - timedelta(minutes=6) or now > first + timedelta(minutes=4, seconds=GRACE_SECONDS):
+            report["state"] = "missed_window"
+            report["missed"] = 3
+            print("RESULT: MISSED_SCHEDULE_WINDOW; no website requests")
             return 0
-        if code != 0:
+        if status_paused():
+            report["state"] = "auth_paused"
+            print("RESULT: PAUSED_DUE_TO_LOGIN; no website requests")
+            return 0
+        for minute in (0, 2, 4):
+            intended = first + timedelta(minutes=minute)
+            current = datetime.now(TZ)
+            if current > intended + timedelta(seconds=GRACE_SECONDS):
+                report["missed"] += 1
+                print(f"SKIP_MISSED_SLOT: {hour:02d}:{minute:02d}")
+                continue
+            wait = (intended - current).total_seconds()
+            if wait > 0:
+                time.sleep(wait)
+            print(f"CHECK_START: {hour:02d}:{minute:02d} Asia/Tashkent")
+            report["attempted"] += 1
+            code = try_one_check()
+            if code == 0:
+                report["succeeded"] += 1
+                continue
+            if code == 4:
+                report["state"] = "auth_paused"
+                return 0
+            report["state"] = "check_error"
             print("RESULT: STOPPED_ON_UNVERIFIED_PAGE; no further checks this hour")
             return 3
-    print(f"RESULT: WINDOW_COMPLETE checks_attempted={performed}")
-    return 0
+        if report["succeeded"] == 3:
+            report["state"] = "complete"
+        elif report["succeeded"] > 0:
+            report["state"] = "partial"
+        else:
+            report["state"] = "missed_window"
+        print(f"RESULT: WINDOW_COMPLETE successful={report['succeeded']} missed={report['missed']}")
+        return 0
+    finally:
+        # Ephemeral diagnostic, not committed, never stores session details.
+        folder = Path(os.environ.get("RUNNER_TEMP") or str(HERE))
+        (folder / "visa_hourly_status.json").write_text(
+            json.dumps(report, ensure_ascii=False), encoding="utf-8"
+        )
 
 
 if __name__ == "__main__":
