@@ -9,6 +9,7 @@ import http.client
 import json
 import os
 import re
+import time
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -27,6 +28,19 @@ def hourly_target() -> tuple[str, int]:
     if not match:
         raise ValueError("UNRECOGNIZED_SCHEDULE")
     return datetime.now(TZ).strftime("%Y-%m-%d"), int(match.group(1)) + 1
+
+
+def wait_until_window_end() -> None:
+    # A paused run can finish at xx:55 without opening the website.
+    # Send its hourly status only after the last intended xx:04 check.
+    if os.getenv("GITHUB_EVENT_NAME") != "schedule":
+        return
+    _, hour = hourly_target()
+    now = datetime.now(TZ)
+    target = now.replace(hour=hour, minute=4, second=15, microsecond=0)
+    delay = (target - now).total_seconds()
+    if 0 < delay <= 600:
+        time.sleep(delay)
 
 
 def status_message() -> str | None:
@@ -96,6 +110,7 @@ def send_message(message: str) -> None:
 
 def main() -> int:
     try:
+        wait_until_window_end()
         message = status_message()
         if message is None:
             print("HEARTBEAT: NOT_REQUESTED")
