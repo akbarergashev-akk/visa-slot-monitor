@@ -1,0 +1,65 @@
+name: Visa Slot Monitor (manual validation only)
+
+# Runs only when you click Run workflow. Scheduling must be enabled
+# only after selectors, authentication, site permission and notifications are validated.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: visa-slot-monitor-single-run
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    defaults:
+      run:
+        working-directory: visa_slot_monitor_free
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      AUTH_STATE_B64: ${{ secrets.AUTH_STATE_B64 }}
+      SLOT_SCOPE_SELECTOR: ${{ secrets.SLOT_SCOPE_SELECTOR }}
+      CALENDAR_READY_SELECTOR: ${{ secrets.CALENDAR_READY_SELECTOR }}
+      SELECTED_CATEGORY_SELECTOR: ${{ secrets.SELECTED_CATEGORY_SELECTOR }}
+      OPEN_SLOT_SELECTOR: ${{ secrets.OPEN_SLOT_SELECTOR }}
+      CALENDAR_URL: ${{ secrets.CALENDAR_URL }}
+      RESET_PAUSE: ${{ inputs.reset_pause }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Verify configuration is present (no secrets printed)
+        shell: bash
+        run: |
+          for name in TELEGRAM_BOT_TOKEN TELEGRAM_CHAT_ID AUTH_STATE_B64 SLOT_SCOPE_SELECTOR CALENDAR_READY_SELECTOR SELECTED_CATEGORY_SELECTOR OPEN_SLOT_SELECTOR; do
+            if [ -z "${!name}" ]; then
+              echo "Missing GitHub Actions secret: $name. No request to embassy was made."
+              exit 1
+            fi
+          done
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: visa_slot_monitor_free/requirements.txt
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Install Chromium
+        run: python -m playwright install --with-deps chromium
+      - name: Check visa calendar once
+        run: python github_actions_runner.py
+      - name: Commit non-sensitive checkpoint only
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add monitor_checkpoint.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Update monitoring checkpoint [skip ci]"
+            git push
+          fi
