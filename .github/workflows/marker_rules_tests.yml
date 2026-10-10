@@ -1,0 +1,26 @@
+name: Validate visa calendar marker rules (offline)
+
+on:
+  pull_request:
+    paths:
+      - 'visa_slot_monitor_free/marker_rules.py'
+      - 'visa_slot_monitor_free/tests/test_marker_rules.py'
+      - '.github/workflows/marker_rules_tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-marker-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: visa_slot_monitor_free
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Confirm only closed markers are classified and unknown markers need review
+        run: python -m unittest discover -s tests -p test_marker_rules.py -v
