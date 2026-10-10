@@ -90,7 +90,7 @@ def main() -> int:
         set_paused(False)
         print("MANUAL_SESSION_RETEST: one check; scheduled times unchanged")
         result = try_one_check()
-        return 0 if result in (0, 4) else 3
+        return 0 if result == 0 else 3
 
     if event_name != "schedule":
         print("RESULT: UNSUPPORTED_EVENT; no checks performed")
