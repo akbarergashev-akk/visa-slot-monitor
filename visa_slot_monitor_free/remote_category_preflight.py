@@ -61,7 +61,24 @@ def main():
                 try:
                     page.locator("table.sc_cal_month").wait_for(state="visible", timeout=25000)
                 except PWTimeout:
-                    print("RESULT: CALENDAR_NOT_VISIBLE")
+                    # Diagnostic categories only: never print URL, HTML, account data or cookies.
+                    from urllib.parse import urlparse
+                    pathname = urlparse(page.url).path.lower()
+                    try:
+                        login_field = page.locator('input[type="password"]:visible').count() > 0
+                        captcha_visible = page.locator(
+                            'iframe[src*="recaptcha"]:visible, iframe[src*="hcaptcha"]:visible, '
+                            '[class*="h-captcha"]:visible, [class*="g-recaptcha"]:visible'
+                        ).count() > 0
+                    except Exception:
+                        login_field, captcha_visible = False, False
+                    if pathname.startswith("/auth/") or login_field:
+                        print("RESULT: LOGIN_REQUIRED (saved session may have expired)")
+                    elif captcha_visible:
+                        print("RESULT: CAPTCHA_REQUIRES_MANUAL_ACTION")
+                    else:
+                        print("RESULT: CALENDAR_NOT_VISIBLE (site response or session unclear)")
+                    print("NOTE: no automatic CAPTCHA bypass, retry loop, or sensitive output.")
                     return 3
                 result = page.evaluate(CHECK_JS)
                 if not result["calendar"]:
