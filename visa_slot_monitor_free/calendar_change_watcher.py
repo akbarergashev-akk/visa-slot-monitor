@@ -22,12 +22,12 @@ CATEGORY_JS = r"""() => {
   const grid = document.querySelector('table.sc_cal_month');
   if (!grid) return false;
   const normalize = s => (s || '').replace(/\s+/g, ' ').trim().toLowerCase();
-  const wanted = 'visa application for short stay (applicant)';
+  const wanted = /visa\\s+application\\s+for\\s+short\\s+stay\\s*\\(\\s*applicant\\s*\\)/i;
   const top = grid.getBoundingClientRect().top;
   return [...document.querySelectorAll('a,button,div,span,p,label,li')].some(el => {
     if (!el.getClientRects().length) return false;
     const text = normalize(el.innerText || el.textContent);
-    if (text !== wanted) return false;
+    if (text.length > 150 || !wanted.test(text)) return false;
     const bottom = el.getBoundingClientRect().bottom;
     return bottom <= top + 10 && bottom >= top - 900;
   });
@@ -79,7 +79,10 @@ def main() -> int:
             page = ctx.new_page()
             response = page.goto(URL, wait_until="domcontentloaded", timeout=30000)
             if response and response.status in (401,403,429):
-                print("RESULT: SITE_RESTRICTED_OR_LOGIN_REQUIRED")
+                if response.status == 401:
+                    print("RESULT: LOGIN_REQUIRED (HTTP 401)")
+                    return 4
+                print("RESULT: SITE_RESTRICTED (no automatic retry)")
                 return 3
             try:
                 page.locator("table.sc_cal_month").wait_for(state="visible", timeout=25000)
@@ -97,6 +100,8 @@ def main() -> int:
                     password_form, challenge = False, False
                 if login_path or password_form:
                     print("RESULT: LOGIN_REQUIRED (saved GitHub session may have expired)")
+                    print("NOTE: No Telegram notification and no site retry performed.")
+                    return 4
                 elif challenge:
                     print("RESULT: CAPTCHA_REQUIRES_MANUAL_ACTION")
                 else:
