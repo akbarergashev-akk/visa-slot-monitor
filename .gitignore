@@ -1,0 +1,14 @@
+# Protect secrets and local browser/session data in this public repository
+**/.env
+**/.env.*
+!**/.env.example
+**/.private/
+**/auth_state.json
+**/storage_state*.json
+**/calendar_url.txt
+**/user_data/
+**/browser_profile/
+**/__pycache__/
+**/.pytest_cache/
+**/*.pyc
+**/*.zip
