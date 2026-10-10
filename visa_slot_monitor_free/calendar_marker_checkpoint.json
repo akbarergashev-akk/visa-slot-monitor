@@ -1,0 +1,39 @@
+{
+  "markers": {
+    "18": {
+      "day": 14,
+      "assets": [
+        "icon_disabled.svg"
+      ],
+      "status": "closed"
+    },
+    "19": {
+      "day": 15,
+      "assets": [
+        "icon_disabled.svg"
+      ],
+      "status": "closed"
+    },
+    "20": {
+      "day": 16,
+      "assets": [
+        "icon_disabled.svg"
+      ],
+      "status": "closed"
+    },
+    "23": {
+      "day": 19,
+      "assets": [
+        "icon_disabled.svg"
+      ],
+      "status": "closed"
+    },
+    "24": {
+      "day": 20,
+      "assets": [
+        "icon_disabled.svg"
+      ],
+      "status": "closed"
+    }
+  }
+}
