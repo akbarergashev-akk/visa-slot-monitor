@@ -1,6 +1,6 @@
 """Best-effort Tashkent-time scheduled Short Stay calendar monitoring.
 
-GitHub cron fires at xx:55, five minutes before each desired top-of-hour.
+GitHub cron fires at xx:30, thirty minutes before each desired top-of-hour.
 Within one warm runner, checks are aligned to :00, :02, :04.
 Missed checks are skipped rather than made up outside the intended window.
 If login is required, persist a non-sensitive pause flag and alert once.
@@ -29,7 +29,7 @@ def target_hour_from_event() -> int:
     if not isinstance(event, dict):
         raise ValueError("INVALID_EVENT")
     cron = event.get("schedule", "")
-    match = re.fullmatch(r"55 (5|6|7|8|9|10|11) \* \* \*", cron)
+    match = re.fullmatch(r"30 (5|6|7|8|9|10|11) \* \* \*", cron)
     if not match:
         raise ValueError("UNRECOGNIZED_CRON_EXPRESSION")
     return int(match.group(1)) + 1
@@ -104,7 +104,7 @@ def main() -> int:
     }
     try:
         # GitHub Actions may start late; never run outside requested window.
-        if now < first - timedelta(minutes=6) or now > first + timedelta(minutes=4, seconds=GRACE_SECONDS):
+        if now < first - timedelta(minutes=36) or now > first + timedelta(minutes=4, seconds=GRACE_SECONDS):
             report["state"] = "missed_window"
             report["missed"] = 3
             print("RESULT: MISSED_SCHEDULE_WINDOW; no website requests")
