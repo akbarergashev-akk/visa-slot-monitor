@@ -1,22 +1,22 @@
 name: Visa calendar Tashkent 06-12 schedule
 
 # Seven daily windows: 06:00/02/04 through 12:00/02/04, Tashkent time.
-# Warm GitHub runner five minutes early. GitHub scheduling is best-effort.
+# Warm GitHub runner thirty minutes early. GitHub scheduling is best-effort.
 on:
   schedule:
-    - cron: '55 5 * * *'
+    - cron: '30 5 * * *'
       timezone: 'Asia/Tashkent'
-    - cron: '55 6 * * *'
+    - cron: '30 6 * * *'
       timezone: 'Asia/Tashkent'
-    - cron: '55 7 * * *'
+    - cron: '30 7 * * *'
       timezone: 'Asia/Tashkent'
-    - cron: '55 8 * * *'
+    - cron: '30 8 * * *'
       timezone: 'Asia/Tashkent'
-    - cron: '55 9 * * *'
+    - cron: '30 9 * * *'
       timezone: 'Asia/Tashkent'
-    - cron: '55 10 * * *'
+    - cron: '30 10 * * *'
       timezone: 'Asia/Tashkent'
-    - cron: '55 11 * * *'
+    - cron: '30 11 * * *'
       timezone: 'Asia/Tashkent'
   workflow_dispatch:
     inputs:
@@ -41,7 +41,7 @@ concurrency:
 jobs:
   read-only-schedule:
     runs-on: ubuntu-latest
-    timeout-minutes: 16
+    timeout-minutes: 45
     env:
       AUTH_STATE_B64: ${{ secrets.AUTH_STATE_B64 }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
