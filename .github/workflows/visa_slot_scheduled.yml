@@ -2,22 +2,9 @@ name: Visa calendar Tashkent 06-12 schedule
 
 # Seven daily windows: 06:00/02/04 through 12:00/02/04, Tashkent time.
 # Warm GitHub runner thirty minutes early. GitHub scheduling is best-effort.
+# Disabled automatic GitHub schedule after local Windows monitor started.
+# Keep only manual tests; GitHub must not double-poll the embassy.
 on:
-  schedule:
-    - cron: '30 5 * * *'
-      timezone: 'Asia/Tashkent'
-    - cron: '30 6 * * *'
-      timezone: 'Asia/Tashkent'
-    - cron: '30 7 * * *'
-      timezone: 'Asia/Tashkent'
-    - cron: '30 8 * * *'
-      timezone: 'Asia/Tashkent'
-    - cron: '30 9 * * *'
-      timezone: 'Asia/Tashkent'
-    - cron: '30 10 * * *'
-      timezone: 'Asia/Tashkent'
-    - cron: '30 11 * * *'
-      timezone: 'Asia/Tashkent'
   workflow_dispatch:
     inputs:
       reset_after_session_update:
