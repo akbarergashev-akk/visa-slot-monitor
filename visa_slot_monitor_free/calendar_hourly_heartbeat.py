@@ -24,7 +24,7 @@ def hourly_target() -> tuple[str, int]:
         raise ValueError("EVENT_NOT_FOUND")
     event = json.loads(Path(p).read_text("utf-8"))
     cron = str(event.get("schedule", ""))
-    match = re.fullmatch(r"55 (5|6|7|8|9|10|11) \* \* \*", cron)
+    match = re.fullmatch(r"30 (5|6|7|8|9|10|11) \* \* \*", cron)
     if not match:
         raise ValueError("UNRECOGNIZED_SCHEDULE")
     return datetime.now(TZ).strftime("%Y-%m-%d"), int(match.group(1)) + 1
@@ -39,7 +39,7 @@ def wait_until_window_end() -> None:
     now = datetime.now(TZ)
     target = now.replace(hour=hour, minute=4, second=15, microsecond=0)
     delay = (target - now).total_seconds()
-    if 0 < delay <= 600:
+    if 0 < delay <= 2400:
         time.sleep(delay)
 
 
