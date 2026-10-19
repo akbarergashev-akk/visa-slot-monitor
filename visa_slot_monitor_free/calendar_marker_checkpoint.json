@@ -1,35 +1,49 @@
 {
   "markers": {
-    "18": {
-      "day": 14,
+    "26": {
+      "day": 22,
       "assets": [
         "icon_disabled.svg"
       ],
       "status": "closed"
     },
-    "19": {
-      "day": 15,
+    "27": {
+      "day": 23,
       "assets": [
         "icon_disabled.svg"
       ],
       "status": "closed"
     },
-    "20": {
-      "day": 16,
+    "30": {
+      "day": 26,
       "assets": [
         "icon_disabled.svg"
       ],
       "status": "closed"
     },
-    "23": {
-      "day": 19,
+    "31": {
+      "day": 27,
       "assets": [
         "icon_disabled.svg"
       ],
       "status": "closed"
     },
-    "24": {
-      "day": 20,
+    "32": {
+      "day": 28,
+      "assets": [
+        "icon_disabled.svg"
+      ],
+      "status": "closed"
+    },
+    "33": {
+      "day": 29,
+      "assets": [
+        "icon_disabled.svg"
+      ],
+      "status": "closed"
+    },
+    "34": {
+      "day": 30,
       "assets": [
         "icon_disabled.svg"
       ],
