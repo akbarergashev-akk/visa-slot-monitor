@@ -29,10 +29,10 @@ def target_hour_from_event() -> int:
     if not isinstance(event, dict):
         raise ValueError("INVALID_EVENT")
     cron = event.get("schedule", "")
-    match = re.fullmatch(r"30 (5|6|7|8|9|10|11) \* \* \*", cron)
+    match = re.fullmatch(r"30 ([0-6]) \* \* \*", cron)
     if not match:
         raise ValueError("UNRECOGNIZED_CRON_EXPRESSION")
-    return int(match.group(1)) + 1
+        return int(match.group(1)) + 6
 
 
 def status_paused() -> bool:
