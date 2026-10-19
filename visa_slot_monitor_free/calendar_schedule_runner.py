@@ -32,7 +32,7 @@ def target_hour_from_event() -> int:
     match = re.fullmatch(r"30 ([0-6]) \* \* \*", cron)
     if not match:
             raise ValueError("UNRECOGNIZED_CRON_EXPRESSION")
-            return int(match.group(1)) + 6
+    return int(match.group(1)) + 6
 
 
 def status_paused() -> bool:
