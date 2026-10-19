@@ -104,7 +104,7 @@ def main() -> int:
     }
     try:
         # GitHub Actions may start late; never run outside requested window.
-        if now < first - timedelta(minutes=36) or now > first + timedelta(minutes=4, seconds=GRACE_SECONDS):
+        if now < first - timedelta(minutes=46) or now > first + timedelta(minutes=30, seconds=GRACE_SECONDS):
             report["state"] = "missed_window"
             report["missed"] = 3
             print("RESULT: MISSED_SCHEDULE_WINDOW; no website requests")
@@ -113,7 +113,7 @@ def main() -> int:
             report["state"] = "auth_paused"
             print("RESULT: PAUSED_DUE_TO_LOGIN; no website requests")
             return 0
-        for minute in (0, 2, 4):
+        for minute in (10, 15, 30):
             intended = first + timedelta(minutes=minute)
             current = datetime.now(TZ)
             if current > intended + timedelta(seconds=GRACE_SECONDS):
