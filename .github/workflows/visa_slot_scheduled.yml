@@ -13,19 +13,18 @@ on:
     - cron: '30 4 * * *'
     - cron: '30 5 * * *'
     - cron: '30 6 * * *'
-    workflow_dispatch:
+  workflow_dispatch:
     inputs:
       reset_after_session_update:
-        description: 'Only after updating AUTH_STATE_B64: clear login pause and test once'
+        description: 'Clear login pause after session update and test once'
         required: true
         default: false
         type: boolean
       test_hourly_telegram:
-        description: 'Send one Telegram status TEST only; do not contact the embassy'
+        description: 'Send Telegram test only'
         required: false
         default: false
         type: boolean
-
 permissions:
   contents: write
 
@@ -36,7 +35,7 @@ concurrency:
 jobs:
   read-only-schedule:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 70
     env:
       AUTH_STATE_B64: ${{ secrets.AUTH_STATE_B64 }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
